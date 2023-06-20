@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB1BC08A2A411A70003E8CF8 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB1BC0882A411A70003E8CF8 /* Image.cpp */; };
 		AB97C3882A40BB49003F9C62 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB97C3872A40BB49003F9C62 /* main.cpp */; };
 		AB97C3922A40BC40003F9C62 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3912A40BC40003F9C62 /* libSDL2-2.0.0.dylib */; };
 		AB97C3942A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3932A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib */; };
@@ -26,6 +27,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AB1BC0882A411A70003E8CF8 /* Image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
+		AB1BC0892A411A70003E8CF8 /* Image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Image.h; sourceTree = "<group>"; };
 		AB97C3842A40BB49003F9C62 /* cpp-image-filters */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cpp-image-filters"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB97C3872A40BB49003F9C62 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AB97C38F2A40BC24003F9C62 /* Cellar */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cellar; path = ../../../../../opt/homebrew/Cellar; sourceTree = "<group>"; };
@@ -51,6 +54,8 @@
 		AB97C37B2A40BB49003F9C62 = {
 			isa = PBXGroup;
 			children = (
+				AB1BC0882A411A70003E8CF8 /* Image.cpp */,
+				AB1BC0892A411A70003E8CF8 /* Image.h */,
 				AB97C3862A40BB49003F9C62 /* cpp-image-filters */,
 				AB97C3852A40BB49003F9C62 /* Products */,
 				AB97C38E2A40BC24003F9C62 /* Frameworks */,
@@ -142,6 +147,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB97C3882A40BB49003F9C62 /* main.cpp in Sources */,
+				AB1BC08A2A411A70003E8CF8 /* Image.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

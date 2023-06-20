@@ -2,6 +2,8 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 
+#include "Image.h"
+
 bool isSimilarColor(SDL_Color color1, SDL_Color color2, int tolerance) {
     int redDiff = abs(color1.r - color2.r);
     int greenDiff = abs(color1.g - color2.g);
@@ -57,15 +59,31 @@ void SDL_SetPixel(SDL_Surface* surface, int x, int y, Uint32 pixel) {
 }
 
 int main() {
-    // Inicialização do SDL
+    static const int HEIGHT = 800;
+    static const int WIDTH = 600;
+    
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 
-    // Carregar imagem de primeiro plano (foreground) e imagem de fundo (background)
-    SDL_Surface* foregroundImage = IMG_Load("/Users/fabriciovo/Documents/GitHub/image_chroma.png");
-    SDL_Surface* backgroundImage = IMG_Load("/Users/fabriciovo/Documents/GitHub/fundo.png");
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao inicializar o SDL: %s", SDL_GetError());
+        return 1;
+    }
 
-    // Criar uma nova superfície para a imagem de saída
+
+    SDL_Window* window = SDL_CreateWindow("Filtros de imagem", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, HEIGHT, WIDTH, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    
+    
+    
+    Image * imageT = new Image(renderer, "/Users/fabriciovo/Developer/bkg.png", 200, 150);
+    Image * imageI = new Image(renderer, "/Users/fabriciovo/Developer/meme.png", 200, 150);
+    
+
+    
+    SDL_Surface* foregroundImage = imageI->getSurface();
+    SDL_Surface* backgroundImage = imageT->getSurface();
+
     SDL_Surface* outputImage = SDL_CreateRGBSurface(0, foregroundImage->w, foregroundImage->h,
                                                     foregroundImage->format->BitsPerPixel,
                                                     foregroundImage->format->Rmask,
@@ -73,11 +91,9 @@ int main() {
                                                     foregroundImage->format->Bmask,
                                                     foregroundImage->format->Amask);
 
-    // Definir a cor-chave e o critério de tolerância
-    SDL_Color chromaKeyColor = { 0, 255, 0 }; // Cor verde é usada como exemplo
-    int tolerance = 50; // Exemplo de critério de tolerância
+    SDL_Color chromaKeyColor = { 0, 255, 0 };
+    int tolerance = 100;
 
-    // Percorrer cada pixel da imagem de primeiro plano
     for (int y = 0; y < foregroundImage->h; y++) {
         for (int x = 0; x < foregroundImage->w; x++) {
             Uint32 foregroundPixel = SDL_GetPixel(foregroundImage, x, y);
@@ -93,17 +109,38 @@ int main() {
         }
     }
 
-    // Salvar a imagem de saída
-    IMG_SavePNG(outputImage, "/Users/fabriciovo/Documents/GitHub/output.png");
+    Image * newImage = new Image(renderer, outputImage, imageI->getWidth(), imageI->getHeight());
+//    IMG_SavePNG(outputImage, "/Users/fabriciovo/Documents/GitHub/output.png");
+//
+//    SDL_FreeSurface(foregroundImage);
+//    SDL_FreeSurface(backgroundImage);
+//    SDL_FreeSurface(outputImage);
 
-    // Liberar memória
-    SDL_FreeSurface(foregroundImage);
-    SDL_FreeSurface(backgroundImage);
-    SDL_FreeSurface(outputImage);
+    
+    bool quit = false;
+    SDL_Event event;
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
 
+        SDL_RenderClear(renderer);
+
+
+        
+        imageI->render(90, 120);
+        imageT->render(500, 120);
+        newImage->render(WIDTH / 2, 320);
+        SDL_RenderPresent(renderer);
+    }
+    
+    
     // Finalização do SDL
     IMG_Quit();
     SDL_Quit();
 
     return 0;
 }
+
