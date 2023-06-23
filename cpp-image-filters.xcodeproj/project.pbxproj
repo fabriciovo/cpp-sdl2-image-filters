@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		AB1BC08A2A411A70003E8CF8 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB1BC0882A411A70003E8CF8 /* Image.cpp */; };
+		AB59763F2A424B590076D8C0 /* Button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB59763D2A424B580076D8C0 /* Button.cpp */; };
+		AB6B3AAA2A45152400192812 /* Input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB6B3AA82A45152400192812 /* Input.cpp */; };
 		AB97C3882A40BB49003F9C62 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB97C3872A40BB49003F9C62 /* main.cpp */; };
 		AB97C3922A40BC40003F9C62 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3912A40BC40003F9C62 /* libSDL2-2.0.0.dylib */; };
 		AB97C3942A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3932A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib */; };
-		AB97C3962A40BCB4003F9C62 /* libSDL2_ttf-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3952A40BCB4003F9C62 /* libSDL2_ttf-2.0.0.dylib */; };
+		ABF2C1F22A42655C00AEFD63 /* libSDL2_ttf-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB97C3952A40BCB4003F9C62 /* libSDL2_ttf-2.0.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,12 +31,17 @@
 /* Begin PBXFileReference section */
 		AB1BC0882A411A70003E8CF8 /* Image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
 		AB1BC0892A411A70003E8CF8 /* Image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Image.h; sourceTree = "<group>"; };
+		AB59763D2A424B580076D8C0 /* Button.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Button.cpp; sourceTree = "<group>"; };
+		AB59763E2A424B590076D8C0 /* Button.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Button.h; sourceTree = "<group>"; };
+		AB6B3AA82A45152400192812 /* Input.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Input.cpp; sourceTree = "<group>"; };
+		AB6B3AA92A45152400192812 /* Input.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Input.h; sourceTree = "<group>"; };
 		AB97C3842A40BB49003F9C62 /* cpp-image-filters */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cpp-image-filters"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB97C3872A40BB49003F9C62 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AB97C38F2A40BC24003F9C62 /* Cellar */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cellar; path = ../../../../../opt/homebrew/Cellar; sourceTree = "<group>"; };
 		AB97C3912A40BC40003F9C62 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../../opt/homebrew/Cellar/sdl2/2.26.5/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		AB97C3932A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_image-2.0.0.dylib"; path = "../../../../../opt/homebrew/Cellar/sdl2_image/2.6.3_1/lib/libSDL2_image-2.0.0.dylib"; sourceTree = "<group>"; };
 		AB97C3952A40BCB4003F9C62 /* libSDL2_ttf-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_ttf-2.0.0.dylib"; path = "../../../../../opt/homebrew/Cellar/sdl2_ttf/2.20.2/lib/libSDL2_ttf-2.0.0.dylib"; sourceTree = "<group>"; };
+		ABF2C1F32A4265A000AEFD63 /* arial.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = arial.ttf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,7 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB97C3962A40BCB4003F9C62 /* libSDL2_ttf-2.0.0.dylib in Frameworks */,
+				ABF2C1F22A42655C00AEFD63 /* libSDL2_ttf-2.0.0.dylib in Frameworks */,
 				AB97C3942A40BCA2003F9C62 /* libSDL2_image-2.0.0.dylib in Frameworks */,
 				AB97C3922A40BC40003F9C62 /* libSDL2-2.0.0.dylib in Frameworks */,
 			);
@@ -54,6 +61,11 @@
 		AB97C37B2A40BB49003F9C62 = {
 			isa = PBXGroup;
 			children = (
+				AB6B3AA82A45152400192812 /* Input.cpp */,
+				AB6B3AA92A45152400192812 /* Input.h */,
+				ABF2C1F32A4265A000AEFD63 /* arial.ttf */,
+				AB59763D2A424B580076D8C0 /* Button.cpp */,
+				AB59763E2A424B590076D8C0 /* Button.h */,
 				AB1BC0882A411A70003E8CF8 /* Image.cpp */,
 				AB1BC0892A411A70003E8CF8 /* Image.h */,
 				AB97C3862A40BB49003F9C62 /* cpp-image-filters */,
@@ -148,6 +160,8 @@
 			files = (
 				AB97C3882A40BB49003F9C62 /* main.cpp in Sources */,
 				AB1BC08A2A411A70003E8CF8 /* Image.cpp in Sources */,
+				AB6B3AAA2A45152400192812 /* Input.cpp in Sources */,
+				AB59763F2A424B590076D8C0 /* Button.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
