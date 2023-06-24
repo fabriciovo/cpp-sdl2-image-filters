@@ -9,13 +9,12 @@ Image::Image(SDL_Renderer* renderer, const std::string& imagePath, int width, in
         }
 
         texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
-        this->surface = imageSurface;
+        surface = imageSurface;
         if (!texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao criar a textura da imagem: %s", SDL_GetError());
             SDL_FreeSurface(imageSurface);
             return;
         }
-
         
     }
 
@@ -36,6 +35,10 @@ SDL_Surface* Image::getSurface() const {
     return surface;
 }
 
+SDL_Texture* Image::getTexture() const {
+    return texture;
+}
+
     void Image::render(int x, int y) {
         SDL_Rect destRect = { x, y, width, height };
         SDL_RenderCopy(renderer, texture, nullptr, &destRect);
@@ -48,3 +51,4 @@ int Image::getWidth() {
 int Image::getHeight() {
     return this->height;
 }
+

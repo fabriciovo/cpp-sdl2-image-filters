@@ -1,9 +1,11 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <cmath>
 #include <string>
+#include <vector>
 
 class Image {
 public:
@@ -11,10 +13,13 @@ public:
     Image(SDL_Renderer* renderer, SDL_Surface* surface, int width, int height);
     ~Image();
     void render(int x, int y);
+
     SDL_Surface * getSurface() const;
+    SDL_Texture* getTexture() const;
 
     int getWidth();
     int getHeight();
+
 private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;

@@ -1,6 +1,6 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <iostream>
 
 #include "Image.h"
@@ -62,11 +62,11 @@ void SDL_SetPixel(SDL_Surface* surface, int x, int y, Uint32 pixel) {
 }
 
 
-int main() {
+int main(int argc, char * argv[]) {
     static const int HEIGHT = 800;
     static const int WIDTH = 600;
     
-    Input input = Input();
+    //Input input = Input();
     
     
     SDL_Init(SDL_INIT_VIDEO);
@@ -96,18 +96,19 @@ int main() {
         return 1;
     }
 
-    if (input.getHasBackground() == "y"){
+    //if (input.getHasBackground() == "y"){
 
-    }
+    //}
     
-    Image * backgroundImage = new Image(renderer, input.getBackgroundPath(), 200, 150);
-    Image * imageOriginal = new Image(renderer, input.getImagePath(), 200, 150);
-    
-    
+    //Image * backgroundImage = new Image(renderer, input.getBackgroundPath(), 200, 150);
+    //Image * imageOriginal = new Image(renderer, input.getImagePath(), 200, 150);
+
+    Image* backgroundImage = new Image(renderer, "bkg.png", 200, 150);
+    Image* imageOriginal = new Image(renderer, "meme.png", 200, 150);
+    //backgroundImage->applyBlurFilter(50);
     
     SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
     SDL_Surface* imageOriginalSurface = imageOriginal->getSurface();
-    
     
     SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, imageOriginalSurface->w, imageOriginalSurface->h,
                                                                   imageOriginalSurface->format->BitsPerPixel,
