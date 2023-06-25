@@ -7,6 +7,161 @@
 #include "Button.h"
 #include "Input.h"
 
+#include <SDL.h>
+#include <SDL_image.h>
+
+void applyBlur(SDL_Surface* surface, int iterations)
+{
+    SDL_Surface* blurredSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+
+    float kernel[9] = {
+        1.0f / 9, 1.0f / 9, 1.0f / 9,
+        1.0f / 9, 1.0f / 9, 1.0f / 9,
+        1.0f / 9, 1.0f / 9, 1.0f / 9
+    };
+
+    Uint32* pixels = (Uint32*)blurredSurface->pixels;
+    int width = blurredSurface->w;
+    int height = blurredSurface->h;
+
+    for (int i = 0; i < iterations; i++)
+    {
+        for (int y = 1; y < height - 1; y++)
+        {
+            for (int x = 1; x < width - 1; x++)
+            {
+                float red = 0.0f, green = 0.0f, blue = 0.0f;
+
+                for (int ky = -1; ky <= 1; ky++)
+                {
+                    for (int kx = -1; kx <= 1; kx++)
+                    {
+                        Uint32 pixel = pixels[(y + ky) * width + (x + kx)];
+                        Uint8 r, g, b;
+                        SDL_GetRGB(pixel, blurredSurface->format, &r, &g, &b);
+
+                        red += r * kernel[(ky + 1) * 3 + (kx + 1)];
+                        green += g * kernel[(ky + 1) * 3 + (kx + 1)];
+                        blue += b * kernel[(ky + 1) * 3 + (kx + 1)];
+                    }
+                }
+
+                Uint32 blurredPixel = SDL_MapRGBA(blurredSurface->format, (Uint8)red, (Uint8)green, (Uint8)blue, 255);
+                pixels[y * width + x] = blurredPixel;
+            }
+        }
+    }
+
+    SDL_BlitSurface(blurredSurface, nullptr, surface, nullptr);
+    SDL_FreeSurface(blurredSurface);
+}
+
+void applySharpen(SDL_Surface* surface)
+{
+    SDL_Surface* sharpenedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+    SDL_Surface* originalSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+
+    int kernel[3][3] = {
+        { -1, -1, -1 },
+        { -1,  9, -1 },
+        { -1, -1,  -1 }
+    };
+
+    Uint32* pixels = (Uint32*)sharpenedSurface->pixels;
+    Uint32* surfacePixels = (Uint32*)originalSurface->pixels;
+
+    int width = sharpenedSurface->w;
+    int height = sharpenedSurface->h;
+
+    for (int y = 1; y < height - 1; y++)
+    {
+        for (int x = 1; x < width - 1; x++)
+        {
+            int red = 0, green = 0, blue = 0;
+
+            for (int ky = -1; ky <= 1; ky++)
+            {
+                for (int kx = -1; kx <= 1; kx++)
+                {
+                    Uint32 pixel = surfacePixels[(y + ky) * width + (x + kx)];
+                    Uint8 r, g, b;
+                    SDL_GetRGB(pixel, sharpenedSurface->format, &r, &g, &b);
+
+                    red += ((int)r) * kernel[ky + 1][kx + 1];
+                    green += ((int)g) * kernel[ky + 1][kx + 1];
+                    blue += ((int)b) * kernel[ky + 1][kx + 1];
+                }
+            }
+
+            red = red < 0 ? 0 : (red > 255 ? 255 : red);
+            green = green < 0 ? 0 : (green > 255 ? 255 : green);
+            blue = blue < 0 ? 0 : (blue > 255 ? 255 : blue);
+
+            Uint32 sharpenedPixel = SDL_MapRGBA(sharpenedSurface->format, red, green, blue, 255);
+            pixels[y * width + x] = sharpenedPixel;
+        }
+    }
+
+    SDL_BlitSurface(sharpenedSurface, nullptr, surface, nullptr);
+    SDL_FreeSurface(sharpenedSurface);
+}
+
+void applyEmboss(SDL_Surface* surface)
+{
+    SDL_Surface* embossedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+    SDL_Surface* originalSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+
+    // Set up the emboss kernel
+    int kernel[3][3] = {
+        {-2, -1,  0},
+        {-1,  1,  1},
+        { 0,  1,  2}
+    };
+
+    Uint32* pixels = (Uint32*)embossedSurface->pixels;
+    Uint32* surfacePixels = (Uint32*)originalSurface->pixels;
+    int width = embossedSurface->w;
+    int height = embossedSurface->h;
+
+    // Apply the emboss filter
+    for (int y = 1; y < height - 1; y++)
+    {
+        for (int x = 1; x < width - 1; x++)
+        {
+            int red = 0, green = 0, blue = 0;
+
+            // Apply the kernel to the surrounding pixels
+            for (int ky = -1; ky <= 1; ky++)
+            {
+                for (int kx = -1; kx <= 1; kx++)
+                {
+                    Uint32 pixel = surfacePixels[(y + ky) * width + (x + kx)];
+                    Uint8 r, g, b;
+                    SDL_GetRGB(pixel, embossedSurface->format, &r, &g, &b);
+
+                    // Accumulate the color values weighted by the kernel
+                    red += r * kernel[ky + 1][kx + 1];
+                    green += g * kernel[ky + 1][kx + 1];
+                    blue += b * kernel[ky + 1][kx + 1];
+                }
+            }
+
+            // Truncate values smaller than zero and larger than 255
+            red = red < 0 ? 0 : (red > 255 ? 255 : red);
+            green = green < 0 ? 0 : (green > 255 ? 255 : green);
+            blue = blue < 0 ? 0 : (blue > 255 ? 255 : blue);
+
+            // Set the pixel color with the embossed values
+            Uint32 embossedPixel = SDL_MapRGBA(embossedSurface->format, red, green, blue, 255);
+            pixels[y * width + x] = embossedPixel;
+        }
+    }
+
+    // Update the original surface with the embossed image
+    SDL_BlitSurface(embossedSurface, nullptr, surface, nullptr);
+    SDL_FreeSurface(embossedSurface);
+}
+
 bool isSimilarColor(SDL_Color color1, SDL_Color color2, int tolerance) {
     int redDiff = abs(color1.r - color2.r);
     int greenDiff = abs(color1.g - color2.g);
@@ -107,9 +262,14 @@ int main(int argc, char * argv[]) {
     Image* imageOriginal = new Image(renderer, "meme.png", 200, 150);
     //backgroundImage->applyBlurFilter(50);
     
+    applyEmboss(backgroundImage->getSurface());
+    applySharpen(imageOriginal->getSurface());
+
     SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
     SDL_Surface* imageOriginalSurface = imageOriginal->getSurface();
     
+
+
     SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, imageOriginalSurface->w, imageOriginalSurface->h,
                                                                   imageOriginalSurface->format->BitsPerPixel,
                                                                   imageOriginalSurface->format->Rmask,
@@ -134,9 +294,6 @@ int main(int argc, char * argv[]) {
             }
         }
     }
-
-
-    
     
     Image * newImage = new Image(renderer, outputImageWithBackground, imageOriginal->getWidth(), imageOriginal->getHeight());
 //    IMG_SavePNG(outputImage, "/Users/fabriciovo/Documents/GitHub/output.png");

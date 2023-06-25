@@ -34,6 +34,9 @@ Image::~Image() {
 SDL_Surface* Image::getSurface() const {
     return surface;
 }
+void Image::setSurface(SDL_Surface * surface) {
+     this->surface = surface;
+}
 
 SDL_Texture* Image::getTexture() const {
     return texture;

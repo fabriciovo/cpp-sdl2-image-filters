@@ -13,12 +13,14 @@ public:
     Image(SDL_Renderer* renderer, SDL_Surface* surface, int width, int height);
     ~Image();
     void render(int x, int y);
+    void setSurface(SDL_Surface* surface);
 
     SDL_Surface * getSurface() const;
     SDL_Texture* getTexture() const;
 
     int getWidth();
     int getHeight();
+
 
 private:
     SDL_Renderer* renderer;
