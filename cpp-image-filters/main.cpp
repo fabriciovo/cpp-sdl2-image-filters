@@ -10,9 +10,9 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-void applyBlur(SDL_Surface* surface, int iterations)
+void applyBlur(Image * img, int iterations)
 {
-    SDL_Surface* blurredSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
+    SDL_Surface* blurredSurface = SDL_ConvertSurfaceFormat(img->getOriginalSurface(), SDL_PIXELFORMAT_RGBA8888, 0);
 
     float kernel[9] = {
         1.0f / 9, 1.0f / 9, 1.0f / 9,
@@ -52,12 +52,14 @@ void applyBlur(SDL_Surface* surface, int iterations)
         }
     }
 
-    SDL_BlitSurface(blurredSurface, nullptr, surface, nullptr);
+    SDL_BlitSurface(blurredSurface, nullptr, img->getSurface(), nullptr);
+    img->setSurface(blurredSurface);
     SDL_FreeSurface(blurredSurface);
 }
 
-void applySharpen(SDL_Surface* surface)
+void applySharpen(Image* img)
 {
+    SDL_Surface* surface = img->getOriginalSurface();
     SDL_Surface* sharpenedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
     SDL_Surface* originalSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
 
@@ -103,15 +105,15 @@ void applySharpen(SDL_Surface* surface)
     }
 
     SDL_BlitSurface(sharpenedSurface, nullptr, surface, nullptr);
-    SDL_FreeSurface(sharpenedSurface);
+    img->setSurface(sharpenedSurface);
 }
 
-void applyEmboss(SDL_Surface* surface)
+void applyEmboss(Image* img)
 {
+    SDL_Surface* surface = img->getOriginalSurface();
     SDL_Surface* embossedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
     SDL_Surface* originalSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA8888, 0);
 
-    // Set up the emboss kernel
     int kernel[3][3] = {
         {-2, -1,  0},
         {-1,  1,  1},
@@ -123,14 +125,12 @@ void applyEmboss(SDL_Surface* surface)
     int width = embossedSurface->w;
     int height = embossedSurface->h;
 
-    // Apply the emboss filter
     for (int y = 1; y < height - 1; y++)
     {
         for (int x = 1; x < width - 1; x++)
         {
             int red = 0, green = 0, blue = 0;
 
-            // Apply the kernel to the surrounding pixels
             for (int ky = -1; ky <= 1; ky++)
             {
                 for (int kx = -1; kx <= 1; kx++)
@@ -139,27 +139,24 @@ void applyEmboss(SDL_Surface* surface)
                     Uint8 r, g, b;
                     SDL_GetRGB(pixel, embossedSurface->format, &r, &g, &b);
 
-                    // Accumulate the color values weighted by the kernel
                     red += r * kernel[ky + 1][kx + 1];
                     green += g * kernel[ky + 1][kx + 1];
                     blue += b * kernel[ky + 1][kx + 1];
                 }
             }
 
-            // Truncate values smaller than zero and larger than 255
             red = red < 0 ? 0 : (red > 255 ? 255 : red);
             green = green < 0 ? 0 : (green > 255 ? 255 : green);
             blue = blue < 0 ? 0 : (blue > 255 ? 255 : blue);
 
-            // Set the pixel color with the embossed values
             Uint32 embossedPixel = SDL_MapRGBA(embossedSurface->format, red, green, blue, 255);
             pixels[y * width + x] = embossedPixel;
         }
     }
 
-    // Update the original surface with the embossed image
     SDL_BlitSurface(embossedSurface, nullptr, surface, nullptr);
-    SDL_FreeSurface(embossedSurface);
+    img->setSurface(embossedSurface);
+
 }
 
 bool isSimilarColor(SDL_Color color1, SDL_Color color2, int tolerance) {
@@ -216,7 +213,6 @@ void SDL_SetPixel(SDL_Surface* surface, int x, int y, Uint32 pixel) {
     }
 }
 
-
 int main(int argc, char * argv[]) {
     static const int HEIGHT = 800;
     static const int WIDTH = 600;
@@ -251,31 +247,21 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
-    //if (input.getHasBackground() == "y"){
-
-    //}
-    
     //Image * backgroundImage = new Image(renderer, input.getBackgroundPath(), 200, 150);
     //Image * imageOriginal = new Image(renderer, input.getImagePath(), 200, 150);
 
-    Image* backgroundImage = new Image(renderer, "bkg.png", 200, 150);
-    Image* imageOriginal = new Image(renderer, "meme.png", 200, 150);
-    //backgroundImage->applyBlurFilter(50);
-    
-    applyEmboss(backgroundImage->getSurface());
-    applySharpen(imageOriginal->getSurface());
+    Image* backgroundImage = new Image(renderer, "bkg.png", 700, 500);
+    Image* imageOriginal = new Image(renderer, "meme.png", 700, 500);   
 
     SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
     SDL_Surface* imageOriginalSurface = imageOriginal->getSurface();
-    
 
-
-    SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, imageOriginalSurface->w, imageOriginalSurface->h,
-                                                                  imageOriginalSurface->format->BitsPerPixel,
-                                                                  imageOriginalSurface->format->Rmask,
-                                                                  imageOriginalSurface->format->Gmask,
-                                                                  imageOriginalSurface->format->Bmask,
-                                                                  imageOriginalSurface->format->Amask);
+    SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, backgroundImageSurface->w, backgroundImageSurface->h,
+        backgroundImageSurface->format->BitsPerPixel,
+        backgroundImageSurface->format->Rmask,
+        backgroundImageSurface->format->Gmask,
+        backgroundImageSurface->format->Bmask,
+        backgroundImageSurface->format->Amask);
 
     SDL_Color chromaKeyColor = { 0, 255, 0 };
     int tolerance = 100;
@@ -295,20 +281,14 @@ int main(int argc, char * argv[]) {
         }
     }
     
-    Image * newImage = new Image(renderer, outputImageWithBackground, imageOriginal->getWidth(), imageOriginal->getHeight());
-//    IMG_SavePNG(outputImage, "/Users/fabriciovo/Documents/GitHub/output.png");
-//
-//    SDL_FreeSurface(foregroundImage);
-//    SDL_FreeSurface(backgroundImage);
-//    SDL_FreeSurface(outputImage);
+      Image * outputImage = new Image(renderer, outputImageWithBackground, imageOriginal->getWidth(), imageOriginal->getHeight());
 
-    Button * btnSaveImage = new Button(renderer, font, "Save Image", 120, 400, 200, 40);
-    Button * btnLoadImage = new Button(renderer, font, "Load Image", 120, 400, 200, 40);
-    Button * btnLoadBackground = new Button(renderer, font, "Load Background", 120, 400, 200, 40);
-    Button * btnAddBackground = new Button(renderer, font, "Add Background", 120, 400, 200, 40);
-    Button * btnAddBlur = new Button(renderer, font, "Blur", 120, 400, 200, 40);
-    Button * btnAddSharpen = new Button(renderer, font, "Sharpen", 120, 400, 200, 40);
-    Button * btnAddEmboss = new Button(renderer, font, "Emboss", 120, 400, 200, 40);
+
+    Button * btnSaveImage = new Button(renderer, font, "Save Image", 570, 520, 200, 40);
+    Button * btnAddBlur = new Button(renderer, font, "Blur", 100, 520, 100, 40);
+    Button * btnAddSharpen = new Button(renderer, font, "Sharpen", 200, 520, 100, 40);
+    Button * btnAddEmboss = new Button(renderer, font, "Emboss", 300, 520, 100, 40);
+    Button* btnResetFilters = new Button(renderer, font, "Reset", 400, 520, 100, 40);
 
     bool quit = false;
     SDL_Event event;
@@ -318,39 +298,39 @@ int main(int argc, char * argv[]) {
                 quit = true;
             }
             btnSaveImage->handleEvent(event);
-            btnLoadImage->handleEvent(event);
-            btnLoadBackground->handleEvent(event);
-            btnAddBackground->handleEvent(event);
             btnAddBlur->handleEvent(event);
             btnAddSharpen->handleEvent(event);
             btnAddEmboss->handleEvent(event);
+            btnResetFilters->handleEvent(event);
         }
 
         SDL_RenderClear(renderer);
 
+
+
         if (btnSaveImage->isClicked()){
-            //IMG_SavePNG(outputImage, "output.png");
-        }
-        if (btnLoadImage->isClicked()){
-            
-        }
-        if (btnAddBackground->isClicked()){
-            
-        }
-        if (btnAddBackground->isClicked()){
-            
+            IMG_SavePNG(outputImage->getSurface(), "output.png");
         }
         if (btnAddBlur->isClicked()){
-            
+            applyBlur(outputImage, 3);
         }
         if (btnAddEmboss->isClicked()){
-            
+            applyEmboss(outputImage);
         }
+        if (btnAddSharpen->isClicked()) {
+            applySharpen(outputImage);
+        }
+        if (btnResetFilters->isClicked()) {
+            outputImage->resetSurface();
+        }
+        outputImage->render(0, 0);
         
-        imageOriginal->render(90, 120);
-        backgroundImage->render(500, 120);
-        newImage->render(WIDTH / 2, 320);
         btnSaveImage->render();
+        btnAddBlur->render();
+        btnAddSharpen->render();
+        btnAddEmboss->render();
+        btnResetFilters->render();
+
         SDL_RenderPresent(renderer);
     }
     

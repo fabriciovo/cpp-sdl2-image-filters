@@ -14,18 +14,22 @@ public:
     ~Image();
     void render(int x, int y);
     void setSurface(SDL_Surface* surface);
+    void resetSurface();
 
     SDL_Surface * getSurface() const;
+    SDL_Surface* getOriginalSurface() const;
     SDL_Texture* getTexture() const;
 
     int getWidth();
     int getHeight();
-
+    SDL_Renderer * getRenderer();
 
 private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Surface* surface;
+    SDL_Surface* _surface;
+    SDL_Surface* originalSurface;
 
     
     int width, height;
