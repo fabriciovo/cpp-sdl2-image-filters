@@ -10,6 +10,11 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
+void removeFilters(Image* img) {
+    SDL_Surface* originalSurface = img->getOriginalSurface();
+    img->setSurface(originalSurface);
+}
+
 void applyBlur(Image * img, int iterations)
 {
     SDL_Surface* blurredSurface = SDL_ConvertSurfaceFormat(img->getOriginalSurface(), SDL_PIXELFORMAT_RGBA8888, 0);
@@ -306,8 +311,6 @@ int main(int argc, char * argv[]) {
 
         SDL_RenderClear(renderer);
 
-
-
         if (btnSaveImage->isClicked()){
             IMG_SavePNG(outputImage->getSurface(), "output.png");
         }
@@ -321,7 +324,8 @@ int main(int argc, char * argv[]) {
             applySharpen(outputImage);
         }
         if (btnResetFilters->isClicked()) {
-            outputImage->resetSurface();
+            removeFilters(outputImage);
+
         }
         outputImage->render(0, 0);
         
