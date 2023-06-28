@@ -33,8 +33,7 @@ public:
     Uint32 getPixel(SDL_Surface* surface, int x, int y);
 
     void saveImage(const std::string& outputPath) const;
-    void applyChromaKeyBackground(const SDL_Color& chromaColor, const std::string& backgroundImagePath);
-
+    void setPixelColor(int x, int y, const SDL_Color& color);
 private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;

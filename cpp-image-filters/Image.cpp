@@ -8,12 +8,14 @@ Image::Image(SDL_Renderer* renderer, const std::string& imagePath, int width, in
             return;
         }
 
-        texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
         surface = imageSurface;
         originalSurface = imageSurface;
+        texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
+
         if (!texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao criar a textura da imagem: %s", SDL_GetError());
             SDL_FreeSurface(imageSurface);
+
             return;
         }
         
@@ -103,7 +105,8 @@ SDL_Renderer * Image::getRenderer() {
 }
 void Image::resetSurface()
 {
-    setSurface(originalSurface);
+    SDL_Surface* originalSurface = getOriginalSurface();
+    setSurface(SDL_ConvertSurfaceFormat(originalSurface, SDL_PIXELFORMAT_RGBA8888, 0));
 }
 
 Uint32 Image::getPixel(SDL_Surface* surface, int x, int y) {
@@ -190,28 +193,28 @@ void Image::applyBlurFilter() {
         float kernelData[] = { 0.111f, 0.111f, 0.111f,
                                0.111f, 0.111f, 0.111f,
                                0.111f, 0.111f, 0.111f };
-
-        SDL_Surface* blurredSurface = SDL_ConvertSurface(surface, surface->format, surface->flags);
+        SDL_Surface* _surface = getOriginalSurface();
+        SDL_Surface* blurredSurface = SDL_ConvertSurface(_surface, _surface->format, _surface->flags);
         if (!blurredSurface) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create blurred surface: %s", SDL_GetError());
             return;
         }
 
-        for (int y = 1; y < surface->h - 1; y++) {
-            for (int x = 1; x < surface->w - 1; x++) {
+        for (int y = 1; y < _surface->h - 1; y++) {
+            for (int x = 1; x < _surface->w - 1; x++) {
                 float r = 0.0f, g = 0.0f, b = 0.0f;
                 for (int ky = 0; ky < kernelSize; ky++) {
                     for (int kx = 0; kx < kernelSize; kx++) {
-                        Uint32 pixel = getPixel(surface, x + kx - 1, y + ky - 1);
+                        Uint32 pixel = getPixel(_surface, x + kx - 1, y + ky - 1);
                         Uint8 pr, pg, pb, pa;
-                        SDL_GetRGBA(pixel, surface->format, &pr, &pg, &pb, &pa);
+                        SDL_GetRGBA(pixel, _surface->format, &pr, &pg, &pb, &pa);
                         float weight = kernelData[ky * kernelSize + kx];
                         r += pr * weight;
                         g += pg * weight;
                         b += pb * weight;
                     }
                 }
-                Uint32 blurredPixel = SDL_MapRGBA(surface->format, static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), 255);
+                Uint32 blurredPixel = SDL_MapRGBA(_surface->format, static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), 255);
                 setPixel(blurredSurface, x, y, blurredPixel);
             }
         }
@@ -227,21 +230,21 @@ void Image::applyEmbossFilter() {
         int kernelData[] = { -2, -1, 0,
                              -1, 1, 1,
                              0, 1, 2 };
-
-        SDL_Surface* filteredSurface = SDL_ConvertSurface(surface, surface->format, surface->flags);
+        SDL_Surface* _surface = getOriginalSurface();
+        SDL_Surface* filteredSurface = SDL_ConvertSurface(_surface, _surface->format, _surface->flags);
         if (!filteredSurface) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create filtered surface: %s", SDL_GetError());
             return;
         }
 
-        for (int y = 1; y < surface->h - 1; y++) {
-            for (int x = 1; x < surface->w - 1; x++) {
+        for (int y = 1; y < _surface->h - 1; y++) {
+            for (int x = 1; x < _surface->w - 1; x++) {
                 int embossR = 0, embossG = 0, embossB = 0;
                 for (int ky = 0; ky < kernelSize; ky++) {
                     for (int kx = 0; kx < kernelSize; kx++) {
-                        Uint32 pixel = getPixel(surface, x + kx - 1, y + ky - 1);
+                        Uint32 pixel = getPixel(_surface, x + kx - 1, y + ky - 1);
                         Uint8 pr, pg, pb, pa;
-                        SDL_GetRGBA(pixel, surface->format, &pr, &pg, &pb, &pa);
+                        SDL_GetRGBA(pixel, _surface->format, &pr, &pg, &pb, &pa);
                         int weight = kernelData[ky * kernelSize + kx];
                         embossR += pr * weight;
                         embossG += pg * weight;
@@ -252,7 +255,7 @@ void Image::applyEmbossFilter() {
                 Uint8 g = static_cast<Uint8>(std::max(0, std::min(255, embossG + 128)));
                 Uint8 b = static_cast<Uint8>(std::max(0, std::min(255, embossB + 128)));
 
-                Uint32 embossPixel = SDL_MapRGB(surface->format, r, g, b);
+                Uint32 embossPixel = SDL_MapRGB(_surface->format, r, g, b);
                 setPixel(filteredSurface, x, y, embossPixel);
             }
         }
@@ -264,22 +267,19 @@ void Image::applyEmbossFilter() {
 
 void Image::applySharpenFilter() {
     if (surface) {
-        // Define the sharpen kernel
         int kernelSize = 3;
         int kernelData[] = { 0, -1, 0,
                             -1, 5, -1,
                              0, -1, 0 };
-
-        // Create a temporary surface to store the filtered image
-        SDL_Surface* filteredSurface = SDL_ConvertSurface(surface, surface->format, surface->flags);
+        SDL_Surface* _surface = getOriginalSurface();
+        SDL_Surface* filteredSurface = SDL_ConvertSurface(_surface, _surface->format, _surface->flags);
         if (!filteredSurface) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create filtered surface: %s", SDL_GetError());
             return;
         }
 
-        // Apply the sharpen filter to each pixel in the surface
-        for (int y = 1; y < surface->h - 1; y++) {
-            for (int x = 1; x < surface->w - 1; x++) {
+        for (int y = 1; y < _surface->h - 1; y++) {
+            for (int x = 1; x < _surface->w - 1; x++) {
                 int red = 0, green = 0, blue = 0;
 
                 for (int ky = 0; ky < kernelSize; ky++) {
@@ -287,9 +287,9 @@ void Image::applySharpenFilter() {
                         int pixelX = x + kx - 1;
                         int pixelY = y + ky - 1;
 
-                        Uint32 pixel = getPixel(surface, pixelX, pixelY);
+                        Uint32 pixel = getPixel(_surface, pixelX, pixelY);
                         Uint8 r, g, b;
-                        SDL_GetRGB(pixel, surface->format, &r, &g, &b);
+                        SDL_GetRGB(pixel, _surface->format, &r, &g, &b);
 
                         int kernelValue = kernelData[ky * kernelSize + kx];
                         red += r * kernelValue;
@@ -302,12 +302,11 @@ void Image::applySharpenFilter() {
                 Uint8 clampedGreen = static_cast<Uint8>(std::max(0, std::min(255, green)));
                 Uint8 clampedBlue = static_cast<Uint8>(std::max(0, std::min(255, blue)));
 
-                Uint32 sharpenedPixel = SDL_MapRGB(surface->format, clampedRed, clampedGreen, clampedBlue);
+                Uint32 sharpenedPixel = SDL_MapRGB(_surface->format, clampedRed, clampedGreen, clampedBlue);
                 setPixel(filteredSurface, x, y, sharpenedPixel);
             }
         }
 
-        // Replace the original surface with the filtered surface
         setSurface(filteredSurface);
         SDL_FreeSurface(filteredSurface);
     }
@@ -346,39 +345,18 @@ void Image::saveImage(const std::string& outputPath) const
     }
 }
 
-void Image::applyChromaKeyBackground(const SDL_Color& chromaColor, const std::string& backgroundImagePath) {
-    SDL_Surface* backgroundSurface = IMG_Load(backgroundImagePath.c_str());
-    if (!backgroundSurface) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load background image: %s", IMG_GetError());
+void Image::setPixelColor(int x, int y, const SDL_Color& color) {
+    if (!surface) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid surface for setPixelColor.");
         return;
     }
 
-    SDL_Surface* convertedBackground = SDL_ConvertSurface(backgroundSurface, surface->format, surface->flags);
-    SDL_FreeSurface(backgroundSurface);
-    if (!convertedBackground) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to convert background surface: %s", SDL_GetError());
-        return;
-    }
+    SDL_PixelFormat* pixelFormat = surface->format;
 
-    SDL_Surface* newSurface = SDL_ConvertSurface(surface, surface->format, surface->flags);
-    if (!newSurface) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create copy of surface: %s", SDL_GetError());
-        SDL_FreeSurface(convertedBackground);
-        return;
-    }
+    int offset = y * surface->pitch + x * pixelFormat->BytesPerPixel;
 
-    Uint32 chromaKey = SDL_MapRGB(surface->format, chromaColor.r, chromaColor.g, chromaColor.b);
+    Uint8* pixel = static_cast<Uint8*>(surface->pixels) + offset;
 
-    Uint32* pixels = static_cast<Uint32*>(newSurface->pixels);
-    Uint32* backgroundPixels = static_cast<Uint32*>(convertedBackground->pixels);
-    int pixelCount = newSurface->w * newSurface->h;
-    for (int i = 0; i < pixelCount; i++) {
-        if (pixels[i] == chromaKey) {
-            pixels[i] = backgroundPixels[i];
-        }
-    }
-
-    setSurface(newSurface);
-    SDL_FreeSurface(convertedBackground);
-    SDL_FreeSurface(newSurface);
+    Uint32 pixelValue = SDL_MapRGB(pixelFormat, color.r, color.g, color.b);
+    *reinterpret_cast<Uint32*>(pixel) = pixelValue;
 }

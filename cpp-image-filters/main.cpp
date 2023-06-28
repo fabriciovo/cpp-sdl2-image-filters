@@ -10,11 +10,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-void removeFilters(Image* img) {
-    SDL_Surface* originalSurface = img->getOriginalSurface();
-    img->setSurface(originalSurface);
-}
-
 void applyBlur(Image * img, int iterations)
 {
     SDL_Surface* blurredSurface = SDL_ConvertSurfaceFormat(img->getOriginalSurface(), SDL_PIXELFORMAT_RGBA8888, 0);
@@ -171,6 +166,38 @@ bool isSimilarColor(SDL_Color color1, SDL_Color color2, int tolerance) {
     return (redDiff <= tolerance) && (greenDiff <= tolerance) && (blueDiff <= tolerance);
 }
 
+bool colorWithinTolerance(const SDL_Color& color1, const SDL_Color& color2, int tolerance) {
+    int redDiff = abs(color1.r - color2.r);
+    int greenDiff = abs(color1.g - color2.g);
+    int blueDiff = abs(color1.b - color2.b);
+
+    return (redDiff <= tolerance && greenDiff <= tolerance && blueDiff <= tolerance);
+}
+
+void chromaKey(Image& foreground, const Image& background, const SDL_Color& chromaColor, int tolerance) {
+    if (!foreground.getSurface() || !background.getSurface()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid surface for chromaKey.");
+        return;
+    }
+
+    SDL_LockSurface(foreground.getSurface());
+    SDL_LockSurface(background.getSurface());
+
+    for (int y = 0; y < foreground.getSurface()->h; y++) {
+        for (int x = 0; x < foreground.getSurface()->w; x++) {
+            SDL_Color foregroundPixelColor = foreground.getPixelColor(x, y);
+
+            if (colorWithinTolerance(foregroundPixelColor, chromaColor, tolerance)) {
+                SDL_Color backgroundPixelColor = background.getPixelColor(x, y);
+                foreground.setPixelColor(x, y, backgroundPixelColor);
+            }
+        }
+    }
+
+    SDL_UnlockSurface(foreground.getSurface());
+    SDL_UnlockSurface(background.getSurface());
+}
+
 Uint32 SDL_GetPixel(SDL_Surface* surface, int x, int y) {
     int bpp = surface->format->BytesPerPixel;
     Uint8* p = static_cast<Uint8*>(surface->pixels) + y * surface->pitch + x * bpp;
@@ -224,7 +251,6 @@ int main(int argc, char * argv[]) {
     
     //Input input = Input();
     
-    
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 
@@ -261,7 +287,7 @@ int main(int argc, char * argv[]) {
     SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
     SDL_Surface* imageOriginalSurface = imageOriginal->getSurface();
 
-    SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, backgroundImageSurface->w, backgroundImageSurface->h,
+    SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, imageOriginalSurface->w, imageOriginalSurface->h,
         backgroundImageSurface->format->BitsPerPixel,
         backgroundImageSurface->format->Rmask,
         backgroundImageSurface->format->Gmask,
@@ -315,17 +341,17 @@ int main(int argc, char * argv[]) {
             IMG_SavePNG(outputImage->getSurface(), "output.png");
         }
         if (btnAddBlur->isClicked()){
-            applyBlur(outputImage, 3);
+            //applyBlur(outputImage, 3);
+            outputImage->applyBlurFilter();
         }
         if (btnAddEmboss->isClicked()){
-            applyEmboss(outputImage);
+            outputImage->applyEmbossFilter();
         }
         if (btnAddSharpen->isClicked()) {
-            applySharpen(outputImage);
+            outputImage->applySharpenFilter();
         }
         if (btnResetFilters->isClicked()) {
-            removeFilters(outputImage);
-
+            outputImage->resetSurface();
         }
         outputImage->render(0, 0);
         
