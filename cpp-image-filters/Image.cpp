@@ -220,7 +220,6 @@ void Image::applyBlurFilter() {
         }
 
         setSurface(blurredSurface);
-        SDL_FreeSurface(blurredSurface);
     }
 }
 
@@ -232,6 +231,7 @@ void Image::applyEmbossFilter() {
                              0, 1, 2 };
         SDL_Surface* _surface = getOriginalSurface();
         SDL_Surface* filteredSurface = SDL_ConvertSurface(_surface, _surface->format, _surface->flags);
+
         if (!filteredSurface) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to create filtered surface: %s", SDL_GetError());
             return;
@@ -261,7 +261,7 @@ void Image::applyEmbossFilter() {
         }
 
         setSurface(filteredSurface);
-        SDL_FreeSurface(filteredSurface);
+        
     }
 }
 
@@ -308,7 +308,6 @@ void Image::applySharpenFilter() {
         }
 
         setSurface(filteredSurface);
-        SDL_FreeSurface(filteredSurface);
     }
 }
 
