@@ -24,9 +24,6 @@ Input::Input(){
     if (hasBackground == "y") {
         std::cout << "Enter the path to the background file:" << std::endl;
         std::cin >> backgroundPath;
-
-        std::cout << "Enter the background chromakey color:" << std::endl;
-        std::cin >> backgroundColor;
     }
 }
 

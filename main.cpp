@@ -1,17 +1,53 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <iostream>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "Image.h"
 #include "Button.h"
 #include "Input.h"
+
+
 
 bool isSimilarColor(SDL_Color color1, SDL_Color color2, int tolerance) {
     int redDiff = abs(color1.r - color2.r);
     int greenDiff = abs(color1.g - color2.g);
     int blueDiff = abs(color1.b - color2.b);
     return (redDiff <= tolerance) && (greenDiff <= tolerance) && (blueDiff <= tolerance);
+}
+
+bool colorWithinTolerance(const SDL_Color& color1, const SDL_Color& color2, int tolerance) {
+    int redDiff = abs(color1.r - color2.r);
+    int greenDiff = abs(color1.g - color2.g);
+    int blueDiff = abs(color1.b - color2.b);
+
+    return (redDiff <= tolerance && greenDiff <= tolerance && blueDiff <= tolerance);
+}
+
+void chromaKey(Image& foreground, const Image& background, const SDL_Color& chromaColor, int tolerance) {
+    if (!foreground.getSurface() || !background.getSurface()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid surface for chromaKey.");
+        return;
+    }
+
+    SDL_LockSurface(foreground.getSurface());
+    SDL_LockSurface(background.getSurface());
+
+    for (int y = 0; y < foreground.getSurface()->h; y++) {
+        for (int x = 0; x < foreground.getSurface()->w; x++) {
+            SDL_Color foregroundPixelColor = foreground.getPixelColor(x, y);
+
+            if (colorWithinTolerance(foregroundPixelColor, chromaColor, tolerance)) {
+                SDL_Color backgroundPixelColor = background.getPixelColor(x, y);
+                foreground.setPixelColor(x, y, backgroundPixelColor);
+            }
+        }
+    }
+
+    SDL_UnlockSurface(foreground.getSurface());
+    SDL_UnlockSurface(background.getSurface());
 }
 
 Uint32 SDL_GetPixel(SDL_Surface* surface, int x, int y) {
@@ -61,13 +97,11 @@ void SDL_SetPixel(SDL_Surface* surface, int x, int y, Uint32 pixel) {
     }
 }
 
-
-int main() {
+int main(int argc, char * argv[]) {
     static const int HEIGHT = 800;
     static const int WIDTH = 600;
     
     Input input = Input();
-    
     
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
@@ -96,61 +130,54 @@ int main() {
         return 1;
     }
 
-    if (input.getHasBackground() == "y"){
+    //Image * backgroundImage = new Image(renderer, input.getBackgroundPath(), 200, 150);
+    //Image * imageOriginal = new Image(renderer, input.getImagePath(), 200, 150);
+    Image* outputOriginal = new Image(renderer, input.getImagePath(), 700, 500);
 
-    }
-    
-    Image * backgroundImage = new Image(renderer, input.getBackgroundPath(), 200, 150);
-    Image * imageOriginal = new Image(renderer, input.getImagePath(), 200, 150);
-    
-    
-    
-    SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
-    SDL_Surface* imageOriginalSurface = imageOriginal->getSurface();
-    
-    
-    SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, imageOriginalSurface->w, imageOriginalSurface->h,
-                                                                  imageOriginalSurface->format->BitsPerPixel,
-                                                                  imageOriginalSurface->format->Rmask,
-                                                                  imageOriginalSurface->format->Gmask,
-                                                                  imageOriginalSurface->format->Bmask,
-                                                                  imageOriginalSurface->format->Amask);
 
-    SDL_Color chromaKeyColor = { 0, 255, 0 };
-    int tolerance = 100;
 
-    for (int y = 0; y < imageOriginalSurface->h; y++) {
-        for (int x = 0; x < imageOriginalSurface->w; x++) {
-            Uint32 originalImagePixel = SDL_GetPixel(imageOriginalSurface, x, y);
-            SDL_Color originalImageColor;
-            SDL_GetRGB(originalImagePixel, imageOriginalSurface->format, &originalImageColor.r, &originalImageColor.g, &originalImageColor.b);
+    if (input.getHasBackground() == "y") {
+        Image* backgroundImage = new Image(renderer, input.getBackgroundPath(), 700, 500);
 
-            if (isSimilarColor(originalImageColor, chromaKeyColor, tolerance)) {
-                Uint32 backgroundPixel = SDL_GetPixel(backgroundImageSurface, x, y);
-                SDL_SetPixel(outputImageWithBackground, x, y, backgroundPixel);
-            } else {
-                SDL_SetPixel(outputImageWithBackground, x, y, originalImagePixel);
+        if (!backgroundImage->getSurface()) {
+         }
+
+
+        SDL_Surface* backgroundImageSurface = backgroundImage->getSurface();
+        SDL_Surface* outputOriginalSurface = outputOriginal->getSurface();
+        SDL_Surface* outputImageWithBackground = SDL_CreateRGBSurface(0, outputOriginalSurface->w, outputOriginalSurface->h,
+            backgroundImageSurface->format->BitsPerPixel,
+            backgroundImageSurface->format->Rmask,
+            backgroundImageSurface->format->Gmask,
+            backgroundImageSurface->format->Bmask,
+            backgroundImageSurface->format->Amask);
+
+        SDL_Color chromaKeyColor = { 0, 255, 0 };
+        int tolerance = 118;
+
+        for (int y = 0; y < outputOriginalSurface->h; y++) {
+            for (int x = 0; x < outputOriginalSurface->w; x++) {
+                Uint32 originalImagePixel = SDL_GetPixel(outputOriginalSurface, x, y);
+                SDL_Color originalImageColor;
+                SDL_GetRGB(originalImagePixel, outputOriginalSurface->format, &originalImageColor.r, &originalImageColor.g, &originalImageColor.b);
+
+                if (isSimilarColor(originalImageColor, chromaKeyColor, tolerance)) {
+                    Uint32 backgroundPixel = SDL_GetPixel(backgroundImageSurface, x, y);
+                    SDL_SetPixel(outputImageWithBackground, x, y, backgroundPixel);
+                } else {
+                    SDL_SetPixel(outputImageWithBackground, x, y, originalImagePixel);
+                }
             }
         }
+    
+        outputOriginal = new Image(renderer, outputImageWithBackground, backgroundImageSurface->w, backgroundImageSurface->h);
     }
 
-
-    
-    
-    Image * newImage = new Image(renderer, outputImageWithBackground, imageOriginal->getWidth(), imageOriginal->getHeight());
-//    IMG_SavePNG(outputImage, "/Users/fabriciovo/Documents/GitHub/output.png");
-//
-//    SDL_FreeSurface(foregroundImage);
-//    SDL_FreeSurface(backgroundImage);
-//    SDL_FreeSurface(outputImage);
-
-    Button * btnSaveImage = new Button(renderer, font, "Save Image", 120, 400, 200, 40);
-    Button * btnLoadImage = new Button(renderer, font, "Load Image", 120, 400, 200, 40);
-    Button * btnLoadBackground = new Button(renderer, font, "Load Background", 120, 400, 200, 40);
-    Button * btnAddBackground = new Button(renderer, font, "Add Background", 120, 400, 200, 40);
-    Button * btnAddBlur = new Button(renderer, font, "Blur", 120, 400, 200, 40);
-    Button * btnAddSharpen = new Button(renderer, font, "Sharpen", 120, 400, 200, 40);
-    Button * btnAddEmboss = new Button(renderer, font, "Emboss", 120, 400, 200, 40);
+    Button * btnSaveImage = new Button(renderer, font, "Save Image", 570, 520, 200, 40);
+    Button * btnAddBlur = new Button(renderer, font, "Blur", 100, 520, 100, 40);
+    Button * btnAddSharpen = new Button(renderer, font, "Sharpen", 200, 520, 100, 40);
+    Button * btnAddEmboss = new Button(renderer, font, "Emboss", 300, 520, 100, 40);
+    Button* btnResetFilters = new Button(renderer, font, "Reset", 400, 520, 100, 40);
 
     bool quit = false;
     SDL_Event event;
@@ -160,44 +187,46 @@ int main() {
                 quit = true;
             }
             btnSaveImage->handleEvent(event);
-            btnLoadImage->handleEvent(event);
-            btnLoadBackground->handleEvent(event);
-            btnAddBackground->handleEvent(event);
             btnAddBlur->handleEvent(event);
             btnAddSharpen->handleEvent(event);
             btnAddEmboss->handleEvent(event);
+            btnResetFilters->handleEvent(event);
         }
 
         SDL_RenderClear(renderer);
 
         if (btnSaveImage->isClicked()){
-            //IMG_SavePNG(outputImage, "output.png");
-        }
-        if (btnLoadImage->isClicked()){
-            
-        }
-        if (btnAddBackground->isClicked()){
-            
-        }
-        if (btnAddBackground->isClicked()){
-            
+            if (IMG_SavePNG(outputOriginal->getSurface(), "output.png") != 0) {
+                    printf("Failed to save image: %s\n", IMG_GetError());
+                    IMG_Quit();
+                    SDL_Quit();
+                    return 1;
+             }
         }
         if (btnAddBlur->isClicked()){
-            
+            //applyBlur(outputImage, 3);
+            outputOriginal->applyBlurFilter();
         }
         if (btnAddEmboss->isClicked()){
-            
+            outputOriginal->applyEmbossFilter();
         }
+        if (btnAddSharpen->isClicked()) {
+            outputOriginal->applySharpenFilter();
+        }
+        if (btnResetFilters->isClicked()) {
+            outputOriginal->resetSurface();
+        }
+        outputOriginal->render(0, 0);
         
-        imageOriginal->render(90, 120);
-        backgroundImage->render(500, 120);
-        newImage->render(WIDTH / 2, 320);
         btnSaveImage->render();
+        btnAddBlur->render();
+        btnAddSharpen->render();
+        btnAddEmboss->render();
+        btnResetFilters->render();
+
         SDL_RenderPresent(renderer);
     }
     
-    
-    // Finalização do SDL
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
