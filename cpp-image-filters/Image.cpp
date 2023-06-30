@@ -5,7 +5,7 @@ Image::Image(SDL_Renderer* renderer, const std::string& imagePath, int width, in
         SDL_Surface* imageSurface = IMG_Load(imagePath.c_str());
         if (!imageSurface) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao carregar a imagem: %s", IMG_GetError());
-            return;
+            exit(1);
         }
 
         surface = imageSurface;
@@ -15,8 +15,7 @@ Image::Image(SDL_Renderer* renderer, const std::string& imagePath, int width, in
         if (!texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Falha ao criar a textura da imagem: %s", SDL_GetError());
             SDL_FreeSurface(imageSurface);
-
-            return;
+            exit(1);
         }
         
     }
